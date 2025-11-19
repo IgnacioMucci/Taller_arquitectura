@@ -121,30 +121,62 @@ begin
 		intAddress := to_integer(unsigned(DataAddrBusMem)); 
 		accessSize := to_integer(unsigned(DataSizeBusMem));
 		iDataBus := 0;
-		if ((intAddress < DATA_BEGIN) or (intAddress > INST_BEGIN-1)) then
-			report "Error: la dirección seleccionada no pertenece a la memoria de datos"
-			severity FAILURE;
-		end if;
+		-- Aca checkeo que este entre los valores posibles de la memoria, le agrege el hecho de que tambien tome los valores del STACK
+		if  ((intAddress < DATA_BEGIN) or (intAddress > INST_BEGIN-1))
+		    and
+		    ((intAddress < STACK_BEGIN) or (intAddress > MEMORY_END))
+		then
+		    report "Error: la dirección seleccionada no pertenece a la memoria de datos ni a la pila"
+		    severity FAILURE;
+		end if;	 
+		
+		-- Aca se intenta hacer el proceso que se lepida en la etapa de memoria y si no esta en un valor pedido retorna valor no valido.
+		-- Voy a cambiarlo para que tenga un if dentro para que si es para los valores de la pila tambien lo tome y acceda en la pila.
 		if (DataCtrlBusMem = READ_MEMORY) then
-			for i in 0 to accessSize-1 loop
-				for j in 0 to Data_Memory(intAddress)'LENGTH-1 loop
-					DataDataBusOutMem(iDataBus) <= Data_Memory(intAddress)(j);
-					iDataBus := iDataBus + 1;
-				end loop;
-				intAddress := intAddress + 1;
+			for i in 0 to accessSize-1 loop 
+			    -- Si dirección pertenece a DATA
+			    if (intAddress >= DATA_BEGIN and intAddress <= INST_BEGIN-1) then
+			        for j in 0 to Data_Memory(intAddress)'LENGTH-1 loop
+			            DataDataBusOutMem(iDataBus) <= Data_Memory(intAddress)(j);
+			            iDataBus := iDataBus + 1;
+			        end loop;
+			    -- Si dirección pertenece a STACK
+			    elsif (intAddress >= STACK_BEGIN and intAddress <= MEMORY_END) then
+			        for j in 0 to Stack_Memory(intAddress)'LENGTH-1 loop
+			            DataDataBusOutMem(iDataBus) <= Stack_Memory(intAddress)(j);
+			            iDataBus := iDataBus + 1;
+			        end loop;
+			    else
+			        report "Error: dirección inválida en lectura de memoria de datos"
+			        severity FAILURE;
+			    end if;
+			    intAddress := intAddress + 1;
 			end loop;
+			-- Ahi termina la lectura y ahora arranca la escritura.
 			EnableDataMemToCpu <= '1';
 			WAIT FOR 1 ps;
 			EnableDataMemToCpu <= '0';
-		elsif (DataCtrlBusMem = WRITE_MEMORY) then 
-			for i in 0 to accessSize-1 loop
-				for j in 0 to Data_Memory(intAddress)'LENGTH-1 loop
-					Data_Memory(intAddress)(j) <= DataDataBusInMem(iDataBus);
-					--Memory(intAddress)(j) <= DataDataBusInMem(iDataBus);
-					iDataBus := iDataBus + 1;
+		elsif (DataCtrlBusMem = WRITE_MEMORY) then
+				for i in 0 to accessSize-1 loop
+				    -- Si dirección pertenece a DATA
+				    if (intAddress >= DATA_BEGIN and intAddress <= INST_BEGIN-1) then
+				        for j in 0 to Data_Memory(intAddress)'LENGTH-1 loop
+				            Data_Memory(intAddress)(j) <= DataDataBusInMem(iDataBus);
+				            iDataBus := iDataBus + 1;
+				        end loop;
+				    -- Si pertenece a STACK
+				    elsif (intAddress >= STACK_BEGIN and intAddress <= MEMORY_END) then
+				        for j in 0 to Stack_Memory(intAddress)'LENGTH-1 loop
+				            Stack_Memory(intAddress)(j) <= DataDataBusInMem(iDataBus);
+				            iDataBus := iDataBus + 1;
+				        end loop;
+				    else
+				        report "Error: dirección inválida en escritura de memoria de datos"
+				        severity FAILURE;
+				    end if;
+				    intAddress := intAddress + 1;
 				end loop;
-				intAddress := intAddress + 1;
-			end loop;
+		-- Termina la escritura y si no existio ningun valor posible error de failure
 		else
 			report "Error: el bus de control de la memoria de datos no posee un valor válido"
 			severity FAILURE;
@@ -152,6 +184,10 @@ begin
 	END PROCESS DataMemory;
 	
 	
+	
+	
+	-- Inicia lo mismo pero en este caso para instrucciones, como ya existen varios valores que puedo toma aca adentro y ya estan mapeados no es necesario tocarlo.
+	-- El unico caso posible es si se pasa de la cantidad de instrucciones que deja la Pc pero eso es imposible ya que es RISC.
 	InstMemory: PROCESS
 	
 	VARIABLE First: BOOLEAN := true;
