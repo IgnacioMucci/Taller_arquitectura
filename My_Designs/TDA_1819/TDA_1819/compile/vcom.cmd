@@ -1,0 +1,1 @@
+-w -d C:/Practica10/My_Designs/TDA_1819/TDA_1819/compile -s C:/Practica10/My_Designs/TDA_1819/library.cfg -j C:/Practica10/My_Designs/TDA_1819/TDA_1819/projlib.cfg -work TDA_1819 -O3 -e 100 -work TDA_1819 -2002 "C:/Practica10/My_Designs/TDA_1819/TDA_1819/src/Usuario/PC/2. CPU/2. Etapas/2. Decode/decode.vhd" 

@@ -1,1 +1,0 @@
--w -d C:/My_Designs/My_Designs/TDA_1819/TDA_1819/compile -s C:/My_Designs/My_Designs/TDA_1819/library.cfg -j C:/My_Designs/My_Designs/TDA_1819/TDA_1819/projlib.cfg -work TDA_1819 -O3 -e 100 -work TDA_1819 -2002 "C:/My_Designs/My_Designs/TDA_1819/TDA_1819/src/Usuario/PC/4. Memoria/memoria.vhd" 
