@@ -83,7 +83,7 @@ Usuario\PC\4. Memoria=1
 [SpecTracer]
 WindowVisible=0
 [HierarchyViewer]
-HierarchyInformation=usuario|USUARIO_ARCHITECTURE|0
+HierarchyInformation=usuario|usuario_architecture|0
 ShowHide=ShowTopLevel
 Selected=
 [Files]
@@ -125,7 +125,6 @@ Usuario\PC\2. CPU\6. Reloj/reloj.vhd=-1
 Usuario\PC\2. CPU\7. Registros/registros.vhd=-1
 Usuario\PC\3. Buses_Admin/buses_admin.vhd=-1
 Usuario\PC\4. Memoria/memoria.vhd=-1
-Packages/const_ensamblador.vhd=-1
 [Files.Data]
 .\src\Packages\const_reloj.vhd=VHDL Source Code
 .\src\Packages\tipos_cpu.vhd=VHDL Source Code
@@ -165,4 +164,3 @@ Packages/const_ensamblador.vhd=-1
 .\src\Usuario\PC\2. CPU\7. Registros\registros.vhd=VHDL Source Code
 .\src\Usuario\PC\3. Buses_Admin\buses_admin.vhd=VHDL Source Code
 .\src\Usuario\PC\4. Memoria\memoria.vhd=VHDL Source Code
-.\src\Packages\const_ensamblador.vhd=VHDL Source Code
