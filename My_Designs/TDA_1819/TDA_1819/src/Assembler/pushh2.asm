@@ -1,9 +1,25 @@
 		.data
 A:		.word	0
+B:		.word	0
+C:		.word	0
+D:		.word	0
+E:		.word	0
 		.code
+		daddi r3, r0, 15
 		daddi r1, r0, 20
-		daddi r2, r0, 20
+		daddi r2, r0, 56
 		pushh r1	
 		pushh r2
+		nop
+		nop
+		nop
+		poph  r3
+		nop
+		nop
+		nop
+		poph  r4
+		nop
+		nop
+		nop
 		halt
 		

@@ -408,11 +408,11 @@ begin
 			WHEN PUSHH =>  
 				
 			    -- Configurar memoria como SH
-			    IDtoMA.mode      <= std_logic_vector(to_unsigned(MEM_MEM, IDtoMA.mode'length));    -- acceso a memoria
-			    IDtoMA.write     <= '1';                                                          -- habilito escritura
+			    IDtoMA.mode      <= std_logic_vector(to_unsigned(MEM_MEM, IDtoMA.mode'length));    
+			    IDtoMA.write     <= '1';                                                          
 			    IDtoMA.read      <= '0';
-			    IDtoMA.datasize  <= std_logic_vector(to_unsigned(2, IDtoMA.datasize'length));      -- 16 bits
-			    IDtoMA.source    <= std_logic_vector(to_unsigned(MEM_ID, IDtoMA.source'length));  -- dato viene de ID
+			    IDtoMA.datasize  <= std_logic_vector(to_unsigned(2, IDtoMA.datasize'length));      
+			    IDtoMA.source    <= std_logic_vector(to_unsigned(MEM_ID, IDtoMA.source'length));  
 			
 			    -- Leer registro fuente
 			    rfAux := to_integer(unsigned(IFtoIDLocal.package1(7 downto 0)));
@@ -423,11 +423,11 @@ begin
 			    EnableRegID <= '0';
 			    WAIT FOR 1 ns;
 				
+				-- Dato a escribir en memoria
+				IDtoMA.data.decode(15 downto 0) <= DataRegOutID(15 downto 0);
+				IDtoMA.data.decode(31 downto 16) <= (others => '0');
+				
 				if (StallRAW = '0') then
-			    -- Dato a escribir en memoria
-			    IDtoMA.data.decode(15 downto 0) <= DataRegOutID(15 downto 0);
-			    IDtoMA.data.decode(31 downto 16) <= (others => '0');
-			
 			    -- Leer el sp
 			    IdRegID    <= std_logic_vector(to_unsigned(ID_SP, IdRegID'length));
 			    SizeRegID  <= std_logic_vector(to_unsigned(2, SizeRegID'length));
@@ -446,7 +446,53 @@ begin
 			    IDtoWB.mode     <= std_logic_vector(to_unsigned(ID_SP + 1, IDtoWB.mode'length)); 
 			    IDtoWB.data.decode(15 downto 0) <= std_logic_vector(to_unsigned(addrAux, 16));
 				end if;
-				
+			WHEN POPH =>
+  
+
+    ----------------------------------------------------------
+    -- 1) Leer SP (registro 37)
+    ----------------------------------------------------------
+    IdRegID     <= std_logic_vector(to_unsigned(ID_SP, IdRegID'length));
+    SizeRegID   <= std_logic_vector(to_unsigned(2, SizeRegID'length));   -- 16 bits
+    EnableRegID <= '1';
+    WAIT FOR 1 ns;
+    EnableRegID <= '0';
+    WAIT FOR 1 ns;
+
+    ----------------------------------------------------------
+    -- 2) Dirección actual del stack
+    ----------------------------------------------------------
+    addrAux := to_integer(unsigned(DataRegOutID(15 downto 0)));
+
+    ----------------------------------------------------------
+    -- 3) Configurar etapa de MEM para lectura (16 bits)
+    ----------------------------------------------------------
+    IDtoMA.mode     <= std_logic_vector(to_unsigned(MEM_MEM, IDtoMA.mode'length));
+    IDtoMA.read     <= '1';
+    IDtoMA.write    <= '0';
+    IDtoMA.datasize <= std_logic_vector(to_unsigned(2, IDtoMA.datasize'length));
+    IDtoMA.address  <= std_logic_vector(to_unsigned(addrAux, IDtoMA.address'length));
+
+    ----------------------------------------------------------
+    -- 4) UNA SOLA ORDEN A WB:
+    -- WB_SPECIAL hará:
+    --   primero: escribir SP actualizado
+    --   segundo: escribir Rx con el dato leído de memoria
+    ----------------------------------------------------------
+	rdAux := to_integer(unsigned(IFtoIDLocal.package1(7 downto 0))) +1;
+	IDtoWB.mode     <= std_logic_vector(to_unsigned(rdAux, IDtoWB.mode'length));
+    IDtoWB.source   <= std_logic_vector(to_unsigned(WB_SPECIAL, IDtoWB.source'length));
+    IDtoWB.datasize <= std_logic_vector(to_unsigned(2, IDtoWB.datasize'length));  -- tamaño mayor
+
+    ----------------------------------------------------------
+    -- Empaquetado:
+    --  - data.decode(31..16) = SP + 2   (nuevo valor de SP)
+    --  - data.decode(15..0)  = se rellena luego en WB con memaccess
+    ----------------------------------------------------------
+    IDtoWB.data.decode <= (others => '0');
+    IDtoWB.data.decode(15 downto 0) <= std_logic_vector( to_unsigned(addrAux + 2, 16));
+			
+
 			WHEN LW =>
 				IDtoMA.mode <= std_logic_vector(to_unsigned(MEM_MEM, IDtoMA.mode'length));
 				IDtoMA.read <= '1';

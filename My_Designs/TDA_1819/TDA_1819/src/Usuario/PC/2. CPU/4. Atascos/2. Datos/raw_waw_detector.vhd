@@ -194,6 +194,7 @@ architecture RAW_WAW_DETECTOR_ARCHITECTURE of raw_waw_detector is
 	SIGNAL F14_WrPending:		UNSIGNED(3 downto 0) := B"0000";
 	SIGNAL F15_WrPending:		UNSIGNED(3 downto 0) := B"0000";
 	SIGNAL FPFLAGS_WrPending:	UNSIGNED(3 downto 0) := B"0000";
+	SIGNAL MPFLAGS_WrPending:	UNSIGNED(3 downto 0) := B"0000";
 
 	
 begin
@@ -389,7 +390,10 @@ begin
 			WHEN ID_BP =>
 				NULL;
 			WHEN ID_SP =>
-				NULL;
+				if (MPFLAGS_WrPending > 0) then
+					StallRAW <= '1';
+					IdRegRAW <= IdRegID; 							  
+				end if;
 			WHEN ID_RA =>
 				NULL;
 			WHEN OTHERS =>
@@ -495,7 +499,7 @@ begin
 				WHEN ID_BP =>
 					NULL;
 				WHEN ID_SP =>
-					NULL;
+					MPFLAGS_WrPending  <=	MPFLAGS_WrPending + 1;
 				WHEN ID_RA =>
 					NULL;
 				WHEN OTHERS =>
@@ -1006,7 +1010,10 @@ begin
 				WHEN ID_BP =>
 					NULL;
 				WHEN ID_SP =>
-					NULL;
+					if ((MPFLAGS_WrPending = 1) and (StallRAW = '1') and (to_integer(unsigned(IdRegRAW)) = ID_SP)) then
+						StallRAW <= '0';
+					end if;
+					MPFLAGS_WrPending <= MPFLAGS_WrPending - 1;
 				WHEN ID_RA =>
 					NULL;
 				WHEN OTHERS =>

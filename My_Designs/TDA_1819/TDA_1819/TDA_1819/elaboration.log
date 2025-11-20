@@ -1,4 +1,4 @@
-Active-HDL 15.0.261.9132 2025-11-20 13:45:34
+Active-HDL 15.0.261.9132 2025-11-20 20:52:17
 
 Elaboration top modules:
 Architecture                  USUARIO_ARCHITECTURE(usuario)
@@ -58,6 +58,7 @@ const_cpu                                            | tda_1819      |      | 15
 const_flags                                          | tda_1819      |      | 15.0.261.9132 (Windows64) | -O3
 const_reloj                                          | tda_1819      |      | 15.0.261.9132 (Windows64) | -O3
 const_registros                                      | tda_1819      |      | 15.0.261.9132 (Windows64) | -O3
+std_logic_textio                                     | ieee          |      | 15.0.261.9132 (Windows64) | <unavailable>
 ------------------------------------------------------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -68,9 +69,3 @@ ieee_proposed                                        | VHDL '93 compatible versi
 std                                                  | Standard VHDL library
 tda_1819                                             | None
 --------------------------------------------------------------------------------------------------------------------------------------------
-
-
-Simulation Options: asim -t ns -O5 +access +r +m+usuario usuario usuario_architecture
-
-
-The performance of simulation is reduced. Version Student Edition

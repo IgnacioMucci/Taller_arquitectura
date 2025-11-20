@@ -45,7 +45,8 @@ LIBRARY IEEE;
 
 USE std.textio.all;
 use ieee.NUMERIC_STD.all;
-USE IEEE.std_logic_1164.all; 
+USE IEEE.std_logic_1164.all;
+use ieee.std_logic_textio.all;
 
 
 
@@ -221,6 +222,7 @@ begin
 			IdRecWAW <= RecInWB.id;
 		end if;
 		WAIT UNTIL falling_edge(EnableWB);
+	
 		if (Mode /= WB_NULL) then												 
 			Source := to_integer(unsigned(RecInWBAct.source));
 			SizeBits := to_integer(unsigned(RecInWBAct.datasize))*8;
@@ -243,6 +245,33 @@ begin
 					for i in SizeBits-1 downto 0 loop
 						DataRegInWB(i) <= RecInWBAct.data.memaccess(i);
 					end loop;
+				WHEN WB_SPECIAL =>
+				      -- Preparar dato para SP
+					    SizeRegWB <= std_logic_vector(to_unsigned(4, SizeRegWB'length));  -- 32 bits
+					    IdRegWB   <= std_logic_vector(to_unsigned(37, IdRegWB'length));   -- registro SP
+					    DataRegInWB <= RecInWBAct.data.decode;                             -- SP + 2
+					    EnableRegWB <= '1';
+					    WAIT FOR 1 ns;
+					    EnableRegWB <= '0';
+					    WAIT FOR 1 ns;
+					
+					    -- Preparar dato para registro destino (Rx)
+					    SizeRegWB <= std_logic_vector(to_unsigned(2, SizeRegWB'length));  -- 16 bits
+						report "Valor de Size = " &
+      					 integer'image(to_integer(unsigned(std_logic_vector(to_unsigned(2, SizeRegWB'length)))));
+
+					    IdRegWB   <= std_logic_vector(to_unsigned(to_integer(unsigned(RecInWBAct.id)), IdRegWB'length));
+					    report "Valor de id = " &
+      					 integer'image(to_integer(unsigned(std_logic_vector(to_unsigned(to_integer(unsigned(RecInWBAct.id)), IdRegWB'length)))));
+						DataRegInWB(15 downto 0) <= RecInWBAct.data.memaccess(15 downto 0);
+						report "Valor de DATArec = " &
+       					integer'image(to_integer(unsigned(RecInWBAct.data.memaccess(15 downto 0))));
+
+					    DataRegInWB(31 downto 16) <= (others => '0');
+						
+					    EnableRegWB <= '1';
+					    WAIT FOR 1 ns;
+   					 EnableRegWB <= '0';
 				WHEN OTHERS =>
 					report "Error: la configuración de la etapa de almacenamiento en registro no es válida"
 					severity FAILURE;
