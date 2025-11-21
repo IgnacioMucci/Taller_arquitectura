@@ -260,18 +260,14 @@ begin
 						report "Valor de Size = " &
       					 integer'image(to_integer(unsigned(std_logic_vector(to_unsigned(2, SizeRegWB'length)))));
 
-					    IdRegWB   <= std_logic_vector(to_unsigned(to_integer(unsigned(RecInWBAct.id)), IdRegWB'length));
-					    report "Valor de id = " &
-      					 integer'image(to_integer(unsigned(std_logic_vector(to_unsigned(to_integer(unsigned(RecInWBAct.id)), IdRegWB'length)))));
-						DataRegInWB(15 downto 0) <= RecInWBAct.data.memaccess(15 downto 0);
-						report "Valor de DATArec = " &
-       					integer'image(to_integer(unsigned(RecInWBAct.data.memaccess(15 downto 0))));
+					   IdRegWB <= std_logic_vector(to_unsigned(to_integer(unsigned(RecInWBAct.mode)) - 1, IdRegWB'length));
 
-					    DataRegInWB(31 downto 16) <= (others => '0');
+						DataRegInWB(15 downto 0) <= RecInWBAct.data.memaccess(15 downto 0);
+						DataRegInWB(31 downto 16) <= (others => '0');
 						
-					    EnableRegWB <= '1';
-					    WAIT FOR 1 ns;
-   					 EnableRegWB <= '0';
+						EnableRegWB <= '1';
+						WAIT FOR 1 ns;
+						EnableRegWB <= '0';
 				WHEN OTHERS =>
 					report "Error: la configuración de la etapa de almacenamiento en registro no es válida"
 					severity FAILURE;

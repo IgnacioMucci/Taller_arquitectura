@@ -453,7 +453,7 @@ begin
     -- 1) Leer SP (registro 37)
     ----------------------------------------------------------
     IdRegID     <= std_logic_vector(to_unsigned(ID_SP, IdRegID'length));
-    SizeRegID   <= std_logic_vector(to_unsigned(2, SizeRegID'length));   -- 16 bits
+    SizeRegID   <= std_logic_vector(to_unsigned(4, SizeRegID'length));   -- 16 bits
     EnableRegID <= '1';
     WAIT FOR 1 ns;
     EnableRegID <= '0';
@@ -479,18 +479,12 @@ begin
     --   primero: escribir SP actualizado
     --   segundo: escribir Rx con el dato leído de memoria
     ----------------------------------------------------------
-	rdAux := to_integer(unsigned(IFtoIDLocal.package1(7 downto 0))) +1;
+	rdAux := to_integer(unsigned(IFtoIDLocal.package1(7 downto 0))) + 1;
+	
 	IDtoWB.mode     <= std_logic_vector(to_unsigned(rdAux, IDtoWB.mode'length));
     IDtoWB.source   <= std_logic_vector(to_unsigned(WB_SPECIAL, IDtoWB.source'length));
     IDtoWB.datasize <= std_logic_vector(to_unsigned(2, IDtoWB.datasize'length));  -- tamaño mayor
-
-    ----------------------------------------------------------
-    -- Empaquetado:
-    --  - data.decode(31..16) = SP + 2   (nuevo valor de SP)
-    --  - data.decode(15..0)  = se rellena luego en WB con memaccess
-    ----------------------------------------------------------
-    IDtoWB.data.decode <= (others => '0');
-    IDtoWB.data.decode(15 downto 0) <= std_logic_vector( to_unsigned(addrAux + 2, 16));
+    IDtoWB.data.decode <= std_logic_vector(to_unsigned(addrAux + 2, 32));
 			
 
 			WHEN LW =>
