@@ -918,112 +918,284 @@ begin
 			end if;
 			indice := indice + 1; 
 			if (INSTTD_SIZE = 6) then
-				for j in 1 to cant_variables loop
-					match := true;
-					i_aux := indice;
-					for k in 1 to variables(j).namelength loop
-						if (cadena(i_aux) /= variables(j).name(k)) then
-							match := false;
-							exit;
-						end if;
-						i_aux := i_aux + 1;
-					end loop;
-					if (match) then
-						addrInm := variables(j).address;
-						indice := indice + variables(j).namelength;
-						exit;
-					end if;
-				end loop; 
-				--indice := indice + 1;
-				if (not match) then
-					report "Error en la línea " & integer'image(num_linea) & " del programa '" & trim(nombre) & "': el segundo operando no hace referencia al nombre de ninguna variable válida declarada"
-					severity FAILURE;
-				end if;
-				if (cadena(indice) /= '(') then
-					report "Error en la línea " & integer'image(num_linea) & " del programa '" & trim(nombre) & "': el segundo operando se encuentra incorrectamente declarado"
-					severity FAILURE;
-				end if;
-				indice := indice + 1;
-				if (cadena(indice) /= 'r') then
-					report "Error en la línea " & integer'image(num_linea) & " del programa '" & trim(nombre) & "': el segundo operando se encuentra incorrectamente declarado"
-					severity FAILURE;
-				end if;
-				indice := indice + 1;
-				if (not isNumber(cadena(indice))) then
-					report "Error en la línea " & integer'image(num_linea) & " del programa '" & trim(nombre) & "': el segundo operando se encuentra incorrectamente declarado"
-					severity FAILURE;
-				end if;
-				for j in DIGITS_DEC'range loop
-					if (cadena(indice) = DIGITS_DEC(j)) then
-						addrReg := j-1;
-						exit;
-					end if;
-				end loop;
-				indice := indice + 1;
-				if (cadena(indice) /= ')') then
-					if (cadena(indice-1) /= '1') then
-						report "Error en la línea " & integer'image(num_linea) & " del programa '" & trim(nombre) & "': el segundo operando se encuentra incorrectamente declarado"
-						severity FAILURE;
-					end if;
-					case cadena(indice) is
-						when '0' to '5' =>
-							for j in DIGITS_DEC'range loop
-								if (cadena(indice) = DIGITS_DEC(j)) then
-									addrReg := 10 + j-1;
-									exit;
-								end if;
-							end loop;
-							indice := indice + 1;
-						when others =>
-							report "Error en la línea " & integer'image(num_linea) & " del programa '" & trim(nombre) & "': el segundo operando se encuentra incorrectamente declarado"
-							severity FAILURE;
-					end case;
-				end if;
-				if (cadena(indice) /= ')') then
-					report "Error en la línea " & integer'image(num_linea) & " del programa '" & trim(nombre) & "': el segundo operando se encuentra incorrectamente declarado"
-					severity FAILURE;
-				end if;
-				indice := indice + 1;
-				InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea, InstAddrBusComp'length));
-				InstDataBusOutComp <= std_logic_vector(to_unsigned(INSTTD_SIZE, InstDataBusOutComp'length));
-				InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
-				InstCtrlBusComp <= WRITE_MEMORY; 
-				EnableCompToInstMem <= '1';
-				WAIT FOR 1 ns;
-				EnableCompToInstMem <= '0';	
-				WAIT FOR 1 ns;
-				InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+1, InstAddrBusComp'length));
-				InstDataBusOutComp <= "ZZZZZZZZZZZZZZZZZZZZZZZZ" & INSTTD_CODE;
-				InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
-				InstCtrlBusComp <= WRITE_MEMORY;
-				EnableCompToInstMem <= '1';
-				WAIT FOR 1 ns;
-				EnableCompToInstMem <= '0';
-				WAIT FOR 1 ns;
-				InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+2, InstAddrBusComp'length));
-				InstDataBusOutComp <= std_logic_vector(to_unsigned(numReg1, InstDataBusOutComp'length));
-				InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
-				InstCtrlBusComp <= WRITE_MEMORY;
-				EnableCompToInstMem <= '1';
-				WAIT FOR 1 ns;
-				EnableCompToInstMem <= '0';	
-				WAIT FOR 1 ns;
-				InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+3, InstAddrBusComp'length));
-				InstDataBusOutComp <= std_logic_vector(to_unsigned(addrInm, InstDataBusOutComp'length));
-				InstSizeBusComp <= std_logic_vector(to_unsigned(2, InstSizeBusComp'length));
-				InstCtrlBusComp <= WRITE_MEMORY;
-				EnableCompToInstMem <= '1';
-				WAIT FOR 1 ns;
-				EnableCompToInstMem <= '0'; 
-				WAIT FOR 1 ns;
-				InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+5, InstAddrBusComp'length));
-				InstDataBusOutComp <= std_logic_vector(to_unsigned(addrReg, InstDataBusOutComp'length));
-				InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
-				InstCtrlBusComp <= WRITE_MEMORY;
-				EnableCompToInstMem <= '1';
-				WAIT FOR 1 ns;
-				EnableCompToInstMem <= '0';
-				WAIT FOR 1 ns; 
+
+			    -- Primer caso: si comienza con dígito => modo inmediato(reg): ej. 8(r3) o 0(sp)
+			    if (isNumber(cadena(indice))) then
+			
+			        -- parseo del inmediato (addrInm)
+			        addrInm := 0;
+			        while (isNumber(cadena(indice))) loop
+			            for jj in DIGITS_DEC'range loop
+			                if (cadena(indice) = DIGITS_DEC(jj)) then
+			                    addrInm := addrInm * 10 + (jj-1);
+			                    exit;
+			                end if;
+			            end loop;
+			            indice := indice + 1;
+			        end loop;
+			
+			        -- verificar '('
+			        if (cadena(indice) /= '(') then
+			            report "Error en la línea " & integer'image(num_linea) &
+			                   " del programa '" & trim(nombre) &
+			                   "': falta '(' después del inmediato"
+			            severity FAILURE;
+			        end if;
+			        indice := indice + 1;
+			
+			        -- leer registro base: sp o rX
+			        if (cadena(indice) = 's' and cadena(indice+1) = 'p') then
+			            addrReg := 37;                -- SP
+			            indice := indice + 2;
+			        elsif (cadena(indice) = 'r') then
+			            indice := indice + 1;
+			            if (not isNumber(cadena(indice))) then
+			                report "Error en la línea " & integer'image(num_linea) &
+			                       " del programa '" & trim(nombre) &
+			                       "': después de 'r' debe venir un dígito"
+			                severity FAILURE;
+			            end if;
+			            for jj in DIGITS_DEC'range loop
+			                if (cadena(indice) = DIGITS_DEC(jj)) then
+			                    addrReg := jj-1;
+			                    exit;
+			                end if;
+			            end loop;
+			            indice := indice + 1;
+			
+			            -- posible segunda cifra (10..15)
+			            if (cadena(indice) /= ')') then
+			                if (cadena(indice-1) /= '1') then
+			                    report "Error en la línea " & integer'image(num_linea) &
+			                           " del programa '" & trim(nombre) &
+			                           "': formato de registro inválido"
+			                    severity FAILURE;
+			                end if;
+			                case cadena(indice) is
+			                    when '0' to '5' =>
+			                        for jj in DIGITS_DEC'range loop
+			                            if (cadena(indice) = DIGITS_DEC(jj)) then
+			                                addrReg := 10 + jj-1;
+			                                exit;
+			                            end if;
+			                        end loop;
+			                        indice := indice + 1;
+			                    when others =>
+			                        report "Error en la línea " & integer'image(num_linea) &
+			                               " del programa '" & trim(nombre) &
+			                               "': formato de registro inválido"
+			                        severity FAILURE;
+			                end case;
+			            end if;
+			        else
+			            report "Error en la línea " & integer'image(num_linea) &
+			                   " del programa '" & trim(nombre) &
+			                   "': registro base inválido (usar rX o sp)"
+			            severity FAILURE;
+			        end if;
+			
+			        -- cerrar ')'
+			        if (cadena(indice) /= ')') then
+			            report "Error en la línea " & integer'image(num_linea) &
+			                   " del programa '" & trim(nombre) &
+			                   "': falta ')'"
+			            severity FAILURE;
+			        end if;
+			        indice := indice + 1;
+			
+			        -- Ahora escribo en memoria la instrucción (inmediato(reg))
+			        InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea, InstAddrBusComp'length));
+			        InstDataBusOutComp <= std_logic_vector(to_unsigned(INSTTD_SIZE, InstDataBusOutComp'length));
+			        InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
+			        InstCtrlBusComp <= WRITE_MEMORY;
+			        EnableCompToInstMem <= '1';
+			        WAIT FOR 1 ns;
+			        EnableCompToInstMem <= '0';
+			        WAIT FOR 1 ns;
+			
+			        InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+1, InstAddrBusComp'length));
+			        InstDataBusOutComp <= "ZZZZZZZZZZZZZZZZZZZZZZZZ" & INSTTD_CODE;
+			        InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
+			        InstCtrlBusComp <= WRITE_MEMORY;
+			        EnableCompToInstMem <= '1';
+			        WAIT FOR 1 ns;
+			        EnableCompToInstMem <= '0';
+			        WAIT FOR 1 ns;
+			
+			        InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+2, InstAddrBusComp'length));
+			        InstDataBusOutComp <= std_logic_vector(to_unsigned(numReg1, InstDataBusOutComp'length));
+			        InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
+			        InstCtrlBusComp <= WRITE_MEMORY;
+			        EnableCompToInstMem <= '1';
+			        WAIT FOR 1 ns;
+			        EnableCompToInstMem <= '0';
+			        WAIT FOR 1 ns;
+			
+			        InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+3, InstAddrBusComp'length));
+			        InstDataBusOutComp <= std_logic_vector(to_unsigned(addrInm, InstDataBusOutComp'length));
+			        InstSizeBusComp <= std_logic_vector(to_unsigned(2, InstSizeBusComp'length));
+			        InstCtrlBusComp <= WRITE_MEMORY;
+			        EnableCompToInstMem <= '1';
+			        WAIT FOR 1 ns;
+			        EnableCompToInstMem <= '0';
+			        WAIT FOR 1 ns;
+			
+			        InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+5, InstAddrBusComp'length));
+			        InstDataBusOutComp <= std_logic_vector(to_unsigned(addrReg, InstDataBusOutComp'length));
+			        InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
+			        InstCtrlBusComp <= WRITE_MEMORY;
+			        EnableCompToInstMem <= '1';
+			        WAIT FOR 1 ns;
+			        EnableCompToInstMem <= '0';
+			        WAIT FOR 1 ns;
+			
+			        i := indice;
+			        check := true;
+			
+			    else
+			        -- Segundo caso: buscar variable en .data (comportamiento original)
+			
+			        match := true;
+			        for j in 1 to cant_variables loop
+			            match := true;
+			            i_aux := indice;
+			            for k in 1 to variables(j).namelength loop
+			                if (cadena(i_aux) /= variables(j).name(k)) then
+			                    match := false;
+			                    exit;
+			                end if;
+			                i_aux := i_aux + 1;
+			            end loop;
+			            if (match) then
+			                addrInm := variables(j).address;
+			                indice := indice + variables(j).namelength;
+			                exit;
+			            end if;
+			        end loop;
+			
+			        if (not match) then
+			            report "Error en la línea " & integer'image(num_linea) &
+			                   " del programa '" & trim(nombre) &
+			                   "': el segundo operando no hace referencia al nombre de ninguna variable válida declarada"
+			            severity FAILURE;
+			        end if;
+			
+			        if (cadena(indice) /= '(') then
+			            report "Error en la línea " & integer'image(num_linea) &
+			                   " del programa '" & trim(nombre) &
+			                   "': falta '(' después del nombre de variable"
+			            severity FAILURE;
+			        end if;
+			        indice := indice + 1;
+			
+			        -- ahora se espera rX o sp dentro de paréntesis (igual que antes)
+			        if (cadena(indice) = 's' and cadena(indice+1) = 'p') then
+			            addrReg := 37;
+			            indice := indice + 2;
+			        elsif (cadena(indice) = 'r') then
+			            indice := indice + 1;
+			            if (not isNumber(cadena(indice))) then
+			                report "Error en la línea " & integer'image(num_linea) &
+			                       " del programa '" & trim(nombre) &
+			                       "': después de 'r' debe venir un dígito"
+			                severity FAILURE;
+			            end if;
+			            for jj in DIGITS_DEC'range loop
+			                if (cadena(indice) = DIGITS_DEC(jj)) then
+			                    addrReg := jj-1;
+			                    exit;
+			                end if;
+			            end loop;
+			            indice := indice + 1;
+			            if (cadena(indice) /= ')') then
+			                if (cadena(indice-1) /= '1') then
+			                    report "Error en la línea " & integer'image(num_linea) &
+			                           " del programa '" & trim(nombre) &
+			                           "': formato de registro inválido"
+			                    severity FAILURE;
+			                end if;
+			                case cadena(indice) is
+			                    when '0' to '5' =>
+			                        for jj in DIGITS_DEC'range loop
+			                            if (cadena(indice) = DIGITS_DEC(jj)) then
+			                                addrReg := 10 + jj-1;
+			                                exit;
+			                            end if;
+			                        end loop;
+			                        indice := indice + 1;
+			                    when others =>
+			                        report "Error en la línea " & integer'image(num_linea) &
+			                               " del programa '" & trim(nombre) &
+			                               "': formato de registro inválido"
+			                        severity FAILURE;
+			                end case;
+			            end if;
+			        else
+			            report "Error en la línea " & integer'image(num_linea) &
+			                   " del programa '" & trim(nombre) &
+			                   "': registro base inválido (usar rX o sp)"
+			            severity FAILURE;
+			        end if;
+			
+			        if (cadena(indice) /= ')') then
+			            report "Error en la línea " & integer'image(num_linea) &
+			                   " del programa '" & trim(nombre) &
+			                   "': falta ')'"
+			            severity FAILURE;
+			        end if;
+			        indice := indice + 1;
+			
+			        -- escritura en memoria (variable + (reg))
+			        InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea, InstAddrBusComp'length));
+			        InstDataBusOutComp <= std_logic_vector(to_unsigned(INSTTD_SIZE, InstDataBusOutComp'length));
+			        InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
+			        InstCtrlBusComp <= WRITE_MEMORY;
+			        EnableCompToInstMem <= '1';
+			        WAIT FOR 1 ns;
+			        EnableCompToInstMem <= '0';
+			        WAIT FOR 1 ns;
+			
+			        InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+1, InstAddrBusComp'length));
+			        InstDataBusOutComp <= "ZZZZZZZZZZZZZZZZZZZZZZZZ" & INSTTD_CODE;
+			        InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
+			        InstCtrlBusComp <= WRITE_MEMORY;
+			        EnableCompToInstMem <= '1';
+			        WAIT FOR 1 ns;
+			        EnableCompToInstMem <= '0';
+			        WAIT FOR 1 ns;
+			
+			        InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+2, InstAddrBusComp'length));
+			        InstDataBusOutComp <= std_logic_vector(to_unsigned(numReg1, InstDataBusOutComp'length));
+			        InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
+			        InstCtrlBusComp <= WRITE_MEMORY;
+			        EnableCompToInstMem <= '1';
+			        WAIT FOR 1 ns;
+			        EnableCompToInstMem <= '0';
+			        WAIT FOR 1 ns;
+			
+			        InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+3, InstAddrBusComp'length));
+			        InstDataBusOutComp <= std_logic_vector(to_unsigned(addrInm, InstDataBusOutComp'length));
+			        InstSizeBusComp <= std_logic_vector(to_unsigned(2, InstSizeBusComp'length));
+			        InstCtrlBusComp <= WRITE_MEMORY;
+			        EnableCompToInstMem <= '1';
+			        WAIT FOR 1 ns;
+			        EnableCompToInstMem <= '0';
+			        WAIT FOR 1 ns;
+			
+			        InstAddrBusComp <= std_logic_vector(to_unsigned(addr_linea+5, InstAddrBusComp'length));
+			        InstDataBusOutComp <= std_logic_vector(to_unsigned(addrReg, InstDataBusOutComp'length));
+			        InstSizeBusComp <= std_logic_vector(to_unsigned(1, InstSizeBusComp'length));
+			        InstCtrlBusComp <= WRITE_MEMORY;
+			        EnableCompToInstMem <= '1';
+			        WAIT FOR 1 ns;
+			        EnableCompToInstMem <= '0';
+			        WAIT FOR 1 ns;
+			
+			        i := indice;
+			        check := true;
+			    end if; -- termina branch isNumber / variable
+			
+ 
 			else
 				if (INSTTD_NAME /= "mfr") then
 					if (cadena(indice) /= 'f') then
@@ -1108,7 +1280,7 @@ begin
 			end if;
 			i := indice;
 			check := true;
-		else
+			else
 			check := false;
 		end if;
 	END checkInstTd;

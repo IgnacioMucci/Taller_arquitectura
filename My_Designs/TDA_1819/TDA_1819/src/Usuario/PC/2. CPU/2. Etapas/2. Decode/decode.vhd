@@ -446,46 +446,33 @@ begin
 			    IDtoWB.mode     <= std_logic_vector(to_unsigned(ID_SP + 1, IDtoWB.mode'length)); 
 			    IDtoWB.data.decode(15 downto 0) <= std_logic_vector(to_unsigned(addrAux, 16));
 				end if;
-			WHEN POPH =>
-  
-
-    ----------------------------------------------------------
-    -- 1) Leer SP (registro 37)
-    ----------------------------------------------------------
-    IdRegID     <= std_logic_vector(to_unsigned(ID_SP, IdRegID'length));
-    SizeRegID   <= std_logic_vector(to_unsigned(4, SizeRegID'length));   -- 16 bits
-    EnableRegID <= '1';
-    WAIT FOR 1 ns;
-    EnableRegID <= '0';
-    WAIT FOR 1 ns;
-
-    ----------------------------------------------------------
-    -- 2) Dirección actual del stack
-    ----------------------------------------------------------
-    addrAux := to_integer(unsigned(DataRegOutID(15 downto 0)));
-
-    ----------------------------------------------------------
-    -- 3) Configurar etapa de MEM para lectura (16 bits)
-    ----------------------------------------------------------
-    IDtoMA.mode     <= std_logic_vector(to_unsigned(MEM_MEM, IDtoMA.mode'length));
-    IDtoMA.read     <= '1';
-    IDtoMA.write    <= '0';
-    IDtoMA.datasize <= std_logic_vector(to_unsigned(2, IDtoMA.datasize'length));
-    IDtoMA.address  <= std_logic_vector(to_unsigned(addrAux, IDtoMA.address'length));
-
-    ----------------------------------------------------------
-    -- 4) UNA SOLA ORDEN A WB:
-    -- WB_SPECIAL hará:
-    --   primero: escribir SP actualizado
-    --   segundo: escribir Rx con el dato leído de memoria
-    ----------------------------------------------------------
-	rdAux := to_integer(unsigned(IFtoIDLocal.package1(7 downto 0))) + 1;
-	
-	IDtoWB.mode     <= std_logic_vector(to_unsigned(rdAux, IDtoWB.mode'length));
-    IDtoWB.source   <= std_logic_vector(to_unsigned(WB_SPECIAL, IDtoWB.source'length));
-    IDtoWB.datasize <= std_logic_vector(to_unsigned(2, IDtoWB.datasize'length));  -- tamaño mayor
-    IDtoWB.data.decode <= std_logic_vector(to_unsigned(addrAux + 2, 32));
+			WHEN POPH => 
+				
+			    --Leo sp
+			    IdRegID     <= std_logic_vector(to_unsigned(ID_SP, IdRegID'length));
+			    SizeRegID   <= std_logic_vector(to_unsigned(4, SizeRegID'length));  
+			    EnableRegID <= '1';
+			    WAIT FOR 1 ns;
+			    EnableRegID <= '0';
+			    WAIT FOR 1 ns;
 			
+			    --direccion del stack
+			    addrAux := to_integer(unsigned(DataRegOutID(15 downto 0)));
+				
+			    --Leo half word
+			    IDtoMA.mode     <= std_logic_vector(to_unsigned(MEM_MEM, IDtoMA.mode'length));
+			    IDtoMA.read     <= '1';
+			    IDtoMA.write    <= '0';
+			    IDtoMA.datasize <= std_logic_vector(to_unsigned(2, IDtoMA.datasize'length));
+			    IDtoMA.address  <= std_logic_vector(to_unsigned(addrAux, IDtoMA.address'length));
+				
+			   --Nuevo Wb para dos wb a la vez
+				rdAux := to_integer(unsigned(IFtoIDLocal.package1(7 downto 0))) + 1;
+				
+				IDtoWB.mode     <= std_logic_vector(to_unsigned(rdAux, IDtoWB.mode'length));
+			    IDtoWB.source   <= std_logic_vector(to_unsigned(WB_SPECIAL, IDtoWB.source'length));
+			    IDtoWB.datasize <= std_logic_vector(to_unsigned(2, IDtoWB.datasize'length));  
+			    IDtoWB.data.decode <= std_logic_vector(to_unsigned(addrAux + 2, 32));
 
 			WHEN LW =>
 				IDtoMA.mode <= std_logic_vector(to_unsigned(MEM_MEM, IDtoMA.mode'length));

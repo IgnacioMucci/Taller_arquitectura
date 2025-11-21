@@ -10,14 +10,15 @@ E:		.word	0
 		daddi r2, r0, 56
 		pushh r1	
 		pushh r2
-		nop
-		nop
-		nop
-		poph  r3
-		nop
+		lh r5, 0(sp)
+		sh  r3, 0(sp)
 		nop
 		nop
 		poph  r4
+		nop
+		nop
+		nop
+		poph r3
 		nop
 		nop
 		nop
