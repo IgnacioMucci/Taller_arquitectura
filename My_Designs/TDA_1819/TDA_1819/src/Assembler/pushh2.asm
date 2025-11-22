@@ -14,11 +14,8 @@ E:		.word	0
 		sh  r3, 0(sp)
 		nop
 		nop
-		poph  r4
-		nop
-		nop
-		nop
-		poph r3
+		poph  r10
+		poph  r11
 		nop
 		nop
 		nop

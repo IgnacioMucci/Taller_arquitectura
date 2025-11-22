@@ -268,6 +268,13 @@ begin
 						EnableRegWB <= '1';
 						WAIT FOR 1 ns;
 						EnableRegWB <= '0';
+						
+						IdRegDecWrPend  <= std_logic_vector(to_unsigned(37 + 1, IdRegDecWrPend'length));	--terminé de escribir sp, no hay problema ahora
+						EnableDecWrPend <= '1';  
+						wait for 1 ns;
+						EnableDecWrPend <= '0';  
+						wait for 1 ns;	
+						
 				WHEN OTHERS =>
 					report "Error: la configuración de la etapa de almacenamiento en registro no es válida"
 					severity FAILURE;

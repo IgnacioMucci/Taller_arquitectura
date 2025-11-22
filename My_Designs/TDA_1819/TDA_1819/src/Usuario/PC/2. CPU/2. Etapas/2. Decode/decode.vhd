@@ -133,6 +133,7 @@ begin
 	VARIABLE rdAux:			INTEGER;
 	VARIABLE addrAux:		INTEGER; 
 	VARIABLE idAux:			INTEGER := 0;
+	VARIABLE Source:		INTEGER := 0; 
 	
 	BEGIN 
 		if (First) then
@@ -317,7 +318,19 @@ begin
 		else
 			updateCodOp := true;
 		end if;
-		--IFtoIDLocal <= IFtoID;
+		--IFtoIDLocal <= IFtoID;  
+		Source:= to_integer(unsigned(IDtoWB.source));
+		if (Source = WB_Special) then -- fuente doble de datos, utilizada únicamente en la instrucción poph
+		    --misma instrucción (mismo id)
+			IdInstIncWrPend <= IDtoWB.id;
+			--SP codificado como ID_SP+1 (igual que en writeback)
+			IdRegIncWrPend  <= std_logic_vector(to_unsigned(ID_SP + 1, IdRegIncWrPend'length));
+		    
+			EnableIncWrPend <= '1';
+			WAIT FOR 1 ns;
+			EnableIncWrPend <= '0';
+			WAIT FOR 1 ns;
+		end if;
 
 		WAIT UNTIL falling_edge(EnableID);
 		Initialize(idAux);
@@ -447,7 +460,7 @@ begin
 			    IDtoWB.data.decode(15 downto 0) <= std_logic_vector(to_unsigned(addrAux, 16));
 				end if;
 			WHEN POPH => 
-				
+				 if (StallRAW = '0') then
 			    --Leo sp
 			    IdRegID     <= std_logic_vector(to_unsigned(ID_SP, IdRegID'length));
 			    SizeRegID   <= std_logic_vector(to_unsigned(4, SizeRegID'length));  
@@ -473,7 +486,7 @@ begin
 			    IDtoWB.source   <= std_logic_vector(to_unsigned(WB_SPECIAL, IDtoWB.source'length));
 			    IDtoWB.datasize <= std_logic_vector(to_unsigned(2, IDtoWB.datasize'length));  
 			    IDtoWB.data.decode <= std_logic_vector(to_unsigned(addrAux + 2, 32));
-
+				 end if;
 			WHEN LW =>
 				IDtoMA.mode <= std_logic_vector(to_unsigned(MEM_MEM, IDtoMA.mode'length));
 				IDtoMA.read <= '1';
