@@ -256,7 +256,7 @@ begin
 					    WAIT FOR 1 ns;
 					
 					    -- Preparar dato para registro destino (Rx)
-					    SizeRegWB <= std_logic_vector(to_unsigned(2, SizeRegWB'length));  -- 16 bits
+					    SizeRegWB <= std_logic_vector(to_unsigned(2, SizeRegWB'length));  
 						report "Valor de Size = " &
       					 integer'image(to_integer(unsigned(std_logic_vector(to_unsigned(2, SizeRegWB'length)))));
 
@@ -269,7 +269,7 @@ begin
 						WAIT FOR 1 ns;
 						EnableRegWB <= '0';
 						
-						IdRegDecWrPend  <= std_logic_vector(to_unsigned(37 + 1, IdRegDecWrPend'length));	--terminé de escribir sp, no hay problema ahora
+						IdRegDecWrPend  <= std_logic_vector(to_unsigned(37 + 1, IdRegDecWrPend'length));
 						EnableDecWrPend <= '1';  
 						wait for 1 ns;
 						EnableDecWrPend <= '0';  

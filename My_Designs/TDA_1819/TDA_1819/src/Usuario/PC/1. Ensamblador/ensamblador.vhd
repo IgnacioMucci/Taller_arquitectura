@@ -1053,7 +1053,6 @@ begin
 			        check := true;
 			
 			    else
-			        -- Segundo caso: buscar variable en .data (comportamiento original)
 			
 			        match := true;
 			        for j in 1 to cant_variables loop

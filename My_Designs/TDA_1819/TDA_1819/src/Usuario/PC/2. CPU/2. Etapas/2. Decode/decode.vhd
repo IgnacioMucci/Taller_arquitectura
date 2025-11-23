@@ -320,10 +320,10 @@ begin
 		end if;
 		--IFtoIDLocal <= IFtoID;  
 		Source:= to_integer(unsigned(IDtoWB.source));
-		if (Source = WB_Special) then -- fuente doble de datos, utilizada únicamente en la instrucción poph
+		if (Source = WB_Special) then -- fuente doble de datos, utilizada solo para poph
 		    --misma instrucción (mismo id)
 			IdInstIncWrPend <= IDtoWB.id;
-			--SP codificado como ID_SP+1 (igual que en writeback)
+			--SP == ID_SP+1 
 			IdRegIncWrPend  <= std_logic_vector(to_unsigned(ID_SP + 1, IdRegIncWrPend'length));
 		    
 			EnableIncWrPend <= '1';

@@ -59,7 +59,7 @@ PACKAGE const_ensamblador is
 	
 	CONSTANT DIGITS_DEC: 		STRING(1 to CANT_DEC) := "0123456789";
 	CONSTANT DIGITS_HEX:		STRING(1 to CANT_HEX) := "0123456789ABCDEF";
-	CONSTANT DIGITS_BIN:		STRING(1 to CANT_BIN) := "01";
+	CONSTANT DIGITS_BIN:		STRING(1 to CANT_BIN) := "01";																								   	
 	
 	CONSTANT DATA_NAMES:		data_name_array(1 to CANT_TIPOS) := (".ascii ", ".asciiz", ".byte  ", ".ubyte ", ".hword ", ".uhword", ".word  ", ".uword ", ".float "); 
 	CONSTANT DATA_TYPES:		data_type_array(1 to CANT_TIPOS) := (IS_STRING, IS_STRINGZ, IS_INTEGER, IS_UINTEGER, IS_INTEGER, IS_UINTEGER, IS_INTEGER, IS_UINTEGER, IS_FLOAT);
